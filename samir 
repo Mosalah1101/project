@@ -1,0 +1,100 @@
+#include <GL/freeglut.h>
+#include <iostream>
+#include <cmath>
+
+float zRotated = 0.0;
+const float PI = 3.14;
+
+
+
+// Define another constant to hold ASCII for Escape key.
+#define KEY_ESC 27
+
+void reshapeFunc(int x, int y)
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(40.0, (GLdouble)x / (GLdouble)y, 0.5, 20.0);
+    glMatrixMode(GL_MODELVIEW);
+    glViewport(0, 0, x, y);
+}
+
+void Draw_Spheres()
+{
+    glClearColor(0.0, 0.0, 0.0, 1.0); // Black background
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+    glTranslatef(0.0, 0.0, -15.0);
+
+    // SUN
+    glColor4f(1.0, 1.0, 0.0, 0.0); // Yellow color
+    glRotatef(zRotated * 0.5, 0, 1, 1);
+    glutSolidSphere(2.2, 100, 100);
+
+    // Other planets
+    float planets[][8] = {
+        // x,   y,   z,    radius,  rotation speed,    color(RGB)
+        {  -3, 0.0, 1.0,     0.2      , 1.0,         1.0, 0.0, 0.0},  // Mercury
+        {-4, 0.0, 2.0,     0.4      , 1.2,         1.0, 0.5, 0.0},  // Venus
+        {-5, 0.0, 3.0,     0.4      , 1.4,         0.1, 0.2, 0.8},  // Earth
+        {-6, 0.0, 4.0,     0.3      , 4.0,         0.8, 0.2, 0.1},  // Mars
+        {-7, 0.0, 5.0,     0.4      , 1.9,         1.0, 0.5, 0.0},  // Jupiter
+        { -8, 0.0, 6.0,     0.4      , 1.7,         0.0, 0.5, 0.5},  // Saturn
+        { -9, 0.0, 7.0,     0.25      , 1.8,         0.5, 1.0, 1.0},  // Uranus
+        { -10,0.0, 8.0,     0.4      , 1.9,         0.1, 0.0, 1.0},  // Neptune
+    };
+
+    for (int i = 0; i < sizeof(planets) / sizeof(planets[0]); ++i)          // x=0  y=1  z=2  radius=3   angle=4   color=5,6,7 
+    {
+        glColor3f(planets[i][5], planets[i][6], planets[i][7]); // Color
+
+        glPushMatrix();
+        glTranslatef(planets[i][0], planets[i][1], planets[i][2]);
+        glRotatef(zRotated * planets[i][4], 0, 0, 1);
+
+        glRotatef(planets[i][4], 1.0f, 0.0f, 0.0f);
+        glTranslatef(cos(planets[i][4] * PI / 180.0f) * planets[i][3], sin(planets[i][4] * PI / 180.0f) * 0.6f, 1.0f);
+
+        glutSolidSphere(planets[i][3], 40, 40);
+
+
+        // Reflection
+
+        glColor3f(planets[i][5] * 0.5, planets[i][6] * 0.5, planets[i][7] * 0.5); // Gray color
+        glScalef(1.0, -1.0, 1.0);
+        glutSolidSphere(planets[i][3], 20, 20);
+        glPopMatrix();
+    }
+
+    glutSwapBuffers();
+}
+
+
+void idleFunc()
+{
+    zRotated += 0.1;
+    glutPostRedisplay();
+}
+
+void PrintableKeys(unsigned char key, int x, int y) {
+    if (key == KEY_ESC) {
+        exit(1); // Exit the program when escape key is pressed
+    }
+}
+
+int main(int argc, char* argv[]) {
+    int width = 1300, height = 800; // Set the window size
+    glutInit(&argc, argv); // Initialize the graphics library
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); // Use color display mode
+    glutInitWindowPosition(50, 50); // Set the initial position of the window
+    glutInitWindowSize(width, height); // Set the window size
+    glutCreateWindow("3D Solar System Scene"); // Set the window title
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    reshapeFunc(width, height); // Set the number of pixels
+    glutDisplayFunc(Draw_Spheres); // Tell the library which function to call for drawing
+    glutReshapeFunc(reshapeFunc); // Tell the library which function to call when reshaping
+    glutIdleFunc(idleFunc); // Tell the library which function to call when idle
+    glutKeyboardFunc(PrintableKeys); // Tell the library which function to call for printable ASCII characters
+    glutMainLoop();
+    return 0;
+}
